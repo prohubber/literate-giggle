@@ -2,23 +2,23 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-var message string
+type Task struct {
+	ID     uint   `json:"id" gorm:"primaryKey"`
+	Task   string `json:"task"`
+	IsDone bool   `json:"is_done"`
+}
 
 type requestBody struct {
-	Message string `json:"message"`
+	Task   string `json:"task"`
+	IsDone bool   `json:"is_done"`
 }
 
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %s!", message)
-}
-
-func MessageHandler(w http.ResponseWriter, r *http.Request) {
+func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	var reqBody requestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
@@ -26,13 +26,40 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message = reqBody.Message
-	w.WriteHeader(http.StatusNoContent)
+	task := Task{
+		Task:   reqBody.Task,
+		IsDone: reqBody.IsDone,
+	}
+
+	if err := DB.Create(&task).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func GetMessages(w http.ResponseWriter, r *http.Request) {
+	var tasks []Task
+
+	if err := DB.Find(&tasks).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tasks)
 }
 
 func main() {
+	// Вызываем метод InitDB() из файла db.go
+	InitDB()
+
+	// Автоматическая миграция модели Task
+	DB.AutoMigrate(&Task{})
+
 	router := mux.NewRouter()
-	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
-	router.HandleFunc("/api/message", MessageHandler).Methods("POST")
+	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
+	router.HandleFunc("/api/messages", GetMessages).Methods("GET")
 	http.ListenAndServe(":8080", router)
 }

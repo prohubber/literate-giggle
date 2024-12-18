@@ -149,7 +149,9 @@ func (h *Handler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedTask)
+	if err := json.NewEncoder(w).Encode(updatedTask); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {

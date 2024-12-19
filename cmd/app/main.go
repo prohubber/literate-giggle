@@ -5,35 +5,48 @@ import (
 	"main/project/internal/database"
 	"main/project/internal/handlers"
 	"main/project/internal/taskService"
+	"main/project/internal/userService"
 	"main/project/internal/web/tasks"
+	"main/project/internal/web/users"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
+	// Инициализация базы данных
 	database.InitDB()
-	if err := database.DB.AutoMigrate(&taskService.Task{}); err != nil {
+	if err := database.DB.AutoMigrate(&taskService.Task{}, &userService.User{}); err != nil {
 		log.Fatalf("Failed to auto-migrate: %v", err)
 	}
 
-	repo := taskService.NewTaskRepository(database.DB)
-	service := taskService.NewService(repo)
+	// Настройка TaskService
+	tasksRepo := taskService.NewTaskRepository(database.DB)
+	tasksService := taskService.NewService(tasksRepo)
+	taskHandlers := handlers.NewHandler(tasksService)
 
-	handler := handlers.NewHandler(service)
+	// Настройка UserService
+	userRepo := userService.NewRepository(database.DB)
+	userService := userService.NewUserService(userRepo)
+	userHandlers := handlers.NewUserHandler(userService)
 
-	// Инициализируем echo
+	// Инициализируем Echo
 	e := echo.New()
 
-	// используем Logger и Recover
+	// Используем Logger и Recover
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Прикол для работы в echo. Передаем и регистрируем хендлер в echo
-	strictHandler := tasks.NewStrictHandler(handler, nil) // тут будет ошибка
-	tasks.RegisterHandlers(e, strictHandler)
+	// Регистрируем хендлеры для задач
+	tasksStrictHandler := tasks.NewStrictHandler(taskHandlers, nil)
+	tasks.RegisterHandlers(e, tasksStrictHandler)
 
+	// Регистрируем хендлеры для пользователей
+	usersStrictHandler := users.NewStrictHandler(userHandlers, nil)
+	users.RegisterHandlers(e, usersStrictHandler)
+
+	// Запуск сервера
 	if err := e.Start(":8080"); err != nil {
-		log.Fatalf("failed to start with err: %v", err)
+		log.Fatalf("Failed to start with error: %v", err)
 	}
 }

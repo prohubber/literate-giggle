@@ -7,7 +7,7 @@ paths:
     get:
       summary: Get all tasks
       tags:
-        - tasks
+      - tasks
       responses:
         '200':
           description: A list of tasks
@@ -20,7 +20,7 @@ paths:
     post:
       summary: Create a new task
       tags:
-        - tasks
+      - tasks
       requestBody:
         description: The task to create
         required: true
@@ -28,6 +28,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Task'
+              properties:
+                user_id:
+                  type: integer
+                  format: uint
+              required:
+              - user_id
       responses:
         '201':
           description: The created task
@@ -39,14 +45,14 @@ paths:
     patch:
       summary: Update a task partially
       tags:
-        - tasks
+      - tasks
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
       requestBody:
         description: Fields to update in the task
         required: true
@@ -64,14 +70,14 @@ paths:
     delete:
       summary: Delete a task
       tags:
-        - tasks
+      - tasks
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
       responses:
         '204':
           description: Task successfully deleted
@@ -79,7 +85,7 @@ paths:
     get:
       summary: Get all users
       tags:
-        - users
+      - users
       responses:
         '200':
           description: A list of users
@@ -92,7 +98,7 @@ paths:
     post:
       summary: Create a new user
       tags:
-        - users
+      - users
       requestBody:
         description: The user to create
         required: true
@@ -111,14 +117,14 @@ paths:
     patch:
       summary: Update a user partially
       tags:
-        - users
+      - users
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
       requestBody:
         description: Fields to update in the user
         required: true
@@ -136,17 +142,38 @@ paths:
     delete:
       summary: Delete a user
       tags:
-        - users
+      - users
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
       responses:
         '204':
           description: User successfully deleted
+  /tasks/user/{user_id}:
+    get:
+      summary: Get tasks by user ID
+      tags:
+      - tasks
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
+      responses:
+        '200':
+          description: A list of tasks for the given user ID
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
 components:
   schemas:
     Task:
@@ -159,6 +186,9 @@ components:
           type: string
         is_done:
           type: boolean
+        user_id:
+          type: integer
+          format: uint
     User:
       type: object
       properties:

@@ -12,6 +12,8 @@ type TaskRepository interface {
 	// GetAllTasks - Возвращаем массив из всех задач в БД и ошибку
 	GetAllTasks() ([]Task, error)
 
+	GetTasksByUserID(userID uint) ([]Task, error)
+
 	// UpdateTaskByID - Передаем id и Task, возвращаем обновленный Task
 	// и ошибку
 	UpdateTaskByID(id uint, task Task) (Task, error)
@@ -45,6 +47,14 @@ func (r *taskRepository) GetAllTasks() ([]Task, error) {
 	var tasks []Task
 	err := r.db.Find(&tasks).Error
 	return tasks, err
+}
+
+func (r *taskRepository) GetTasksByUserID(userID uint) ([]Task, error) {
+	var tasks []Task
+	if err := r.db.Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
 
 // UpdateTaskByID - Обновляет задачу по ID

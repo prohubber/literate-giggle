@@ -16,7 +16,7 @@ type Handler struct {
 	Service *taskService.TaskService
 }
 
-func (h *Handler) GetTasksUserUserId(ctx context.Context, request tasks.GetTasksUserUserIdRequestObject) (tasks.GetTasksUserUserIdResponseObject, error) {
+func (h *Handler) GetUsersUserIdTasks(ctx context.Context, request tasks.GetUsersUserIdTasksRequestObject) (tasks.GetUsersUserIdTasksResponseObject, error) {
 	// Получаем user_id из запроса
 	userID := request.UserId
 
@@ -27,7 +27,7 @@ func (h *Handler) GetTasksUserUserId(ctx context.Context, request tasks.GetTasks
 	}
 
 	// Формируем ответ
-	response := tasks.GetTasksUserUserId200JSONResponse{}
+	response := tasks.GetUsersUserIdTasks200JSONResponse{}
 	for _, tsk := range userTasks {
 		task := tasks.Task{
 			Id:     &tsk.ID,
@@ -57,6 +57,7 @@ func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (ta
 			Id:     &tsk.ID,
 			Task:   &tsk.Task,
 			IsDone: &tsk.IsDone,
+			UserId: &tsk.UserID,
 		}
 		response = append(response, task)
 	}
@@ -84,6 +85,7 @@ func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObj
 		Id:     &createdTask.ID,
 		Task:   &createdTask.Task,
 		IsDone: &createdTask.IsDone,
+		UserId: &createdTask.UserID,
 	}
 	// Просто возвращаем респонс!
 	return response, nil
@@ -113,6 +115,7 @@ func (h *Handler) PatchTasksId(ctx context.Context, request tasks.PatchTasksIdRe
 		Id:     &updatedTask.ID,
 		Task:   &updatedTask.Task,
 		IsDone: &updatedTask.IsDone,
+		UserId: &updatedTask.UserID,
 	}
 
 	// Возвращаем обновленную задачу
